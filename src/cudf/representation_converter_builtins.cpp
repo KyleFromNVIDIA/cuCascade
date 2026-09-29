@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "null_mask_type.hpp"
+#include "cudf_compat.hpp"
 
 #include <cucascade/cuda/event.hpp>
 #include <cucascade/cudf/builtin_converters.hpp>
