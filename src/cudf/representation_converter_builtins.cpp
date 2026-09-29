@@ -15,13 +15,14 @@
  * limitations under the License.
  */
 
+#include "null_mask_type.hpp"
+
 #include <cucascade/cuda/event.hpp>
 #include <cucascade/cudf/builtin_converters.hpp>
 #include <cucascade/cudf/gpu_data_representation.hpp>
 #include <cucascade/cudf/host_data_representation.hpp>
 #include <cucascade/cudf/host_table.hpp>
 #include <cucascade/cudf/host_table_packed.hpp>
-#include <cucascade/cudf/null_mask_type.hpp>
 #include <cucascade/data/disk_data_representation.hpp>
 #include <cucascade/data/disk_file_format.hpp>
 #include <cucascade/data/disk_io_backend.hpp>

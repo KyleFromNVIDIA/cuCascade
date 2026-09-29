@@ -150,11 +150,6 @@ if(NOT CUCASCADE_TOPOLOGY_ONLY)
   # Find cudf only when building the cudf-coupled cucascade-cudf library
   if(CUCASCADE_BUILD_CUDF)
     find_package(cudf REQUIRED CONFIG)
-    if(cudf_VERSION VERSION_GREATER_EQUAL 26.12)
-      add_compile_definitions(CUCASCADE_CUDF_NEW_NULL_MASK=1)
-    else()
-      add_compile_definitions(CUCASCADE_CUDF_NEW_NULL_MASK=0)
-    endif()
   endif()
 
   # Third-party dependencies of the cucascade-io library (datasource layer)
