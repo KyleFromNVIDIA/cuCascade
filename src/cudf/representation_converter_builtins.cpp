@@ -714,7 +714,9 @@ static rmm::device_buffer alloc_and_peer_copy_async(const void* src_ptr,
 }
 
 /**
- * @brief Synchronous version of alloc_and_peer_copy_async. Used for null masks
+ * @brief Allocate a null mask sized for @p rows rows and copy it from @p src_ptr
+ * (on @p src_device), synchronizing before returning. Note @p rows is a row count,
+ * not a byte count - the allocation size comes from cudf::create_null_mask. Used for null masks
  * because cudf column factories may inspect them during column construction.
  */
 static cudf_compat::null_mask_buffer alloc_and_peer_copy_sync(
@@ -1747,12 +1749,18 @@ static std::unique_ptr<cudf::column> reconstruct_column_from_disk(
   rmm::device_async_resource_ref mr,
   idisk_io_backend& backend)
 {
-  // Null mask (shared by all type categories)
-  auto null_mask = cudf::create_null_mask(0, cudf::mask_state::UNALLOCATED);
+  // Null mask (shared by all type categories). create_null_mask(num_rows) allocates exactly
+  // cudf::bitmask_allocation_size_bytes(num_rows), which is what the writer recorded as
+  // meta.null_mask_size, so null_mask.size() is the correct on-disk extent to read.
+  auto null_mask = cudf::create_null_mask(0, cudf::mask_state::UNALLOCATED, stream, mr);
   if (meta.has_null_mask) {
     null_mask = cudf::create_null_mask(meta.num_rows, cudf::mask_state::UNINITIALIZED, stream, mr);
     if (null_mask.size() > 0) {
-      backend.read(file_path, null_mask.data(), null_mask.size(), meta.null_mask_offset, stream);
+      backend.read(file_path,
+                   null_mask.data(),
+                   std::min(null_mask.size(), meta.null_mask_size),
+                   meta.null_mask_offset,
+                   stream);
     }
   }
   const cudf::size_type null_count = meta.has_null_mask ? meta.null_count : 0;

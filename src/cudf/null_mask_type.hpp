@@ -30,6 +30,16 @@
 #include <rmm/device_buffer.hpp>
 #endif
 
+/**
+ * @brief Alias for the buffer type cudf uses to hold a column's null mask.
+ *
+ * cudf 26.12 changed null masks from `rmm::device_buffer` to
+ * `cuda::device_buffer<std::byte>`. `CUCASCADE_CUDF_NEW_NULL_MASK` is set from
+ * `CUDF_VERSION_MAJOR` and `CUDF_VERSION_MINOR` and selects the matching type.
+ *
+ * TODO(https://github.com/rapidsai/build-planning/issues/321): drop this header
+ * once the minimum supported cudf is 26.12.
+ */
 namespace cucascade::cudf_compat {
 #if CUCASCADE_CUDF_NEW_NULL_MASK
 using null_mask_buffer = ::cuda::device_buffer<std::byte>;

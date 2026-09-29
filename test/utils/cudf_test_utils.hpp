@@ -45,6 +45,7 @@ inline auto make_null_mask_from_host(cudf::size_type rows,
                                      ::cuda::stream_ref stream)
 {
   auto mask = cudf::create_null_mask(rows, cudf::mask_state::UNINITIALIZED, stream);
+  REQUIRE(host_mask.size() <= mask.size());
   CUCASCADE_CUDA_TRY(cudaMemcpyAsync(
     mask.data(), host_mask.data(), host_mask.size(), cudaMemcpyHostToDevice, stream.get()));
   stream.sync();
