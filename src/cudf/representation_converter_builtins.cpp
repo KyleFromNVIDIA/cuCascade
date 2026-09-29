@@ -568,8 +568,8 @@ static int resolve_gpu_numa_node(int device_id) noexcept
 }
 
 /**
- * @brief Allocate a target-side device buffer and copy @p size bytes from @p src_ptr
- * (on @p src_device) into it.
+ * @brief Copy @p size bytes from @p src_ptr
+ * (on @p src_device) into a buffer.
  *
  * Routing is decided per-pair by the empirical probe in cucascade::memory
  * (see ensure_p2p_probed):
@@ -698,6 +698,10 @@ static Buffer peer_copy_into(Buffer buf,
   return buf;
 }
 
+/**
+ * @brief Allocate a null mask sized for @p rows rows and fill it, synchronously, from the
+ * host block allocation starting at @p alloc_offset.
+ */
 static rmm::device_buffer alloc_and_peer_copy_async(const void* src_ptr,
                                                     int src_device,
                                                     std::size_t size,
