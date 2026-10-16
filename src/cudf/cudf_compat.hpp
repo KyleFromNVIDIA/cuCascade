@@ -24,7 +24,6 @@
   (CUDF_VERSION_MAJOR > 26 || (CUDF_VERSION_MAJOR == 26 && CUDF_VERSION_MINOR >= 12))
 
 #if CUCASCADE_CUDF_NEW_NULL_MASK
-#include <cstddef>
 #include <rapids/cuda/buffer>
 #else
 #include <rmm/device_buffer.hpp>
