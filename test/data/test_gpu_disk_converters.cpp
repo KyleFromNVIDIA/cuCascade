@@ -234,13 +234,13 @@ TEST_CASE("gpu disk round-trip no-null column", "[disk][gpu-converter][null]")
 
 TEST_CASE("gpu disk round-trip mixed-null column", "[disk][gpu-converter][null]")
 {
-  // Create a column with alternating nulls
+  // Exercise masks beyond the first quarter of the allocation, including a partial word.
+  auto const num_rows = GENERATE(100, 4097);
 
   auto col = cudf::make_numeric_column(
-    cudf::data_type{cudf::type_id::INT32}, 100, cudf::mask_state::ALL_VALID, shared_stream());
+    cudf::data_type{cudf::type_id::INT32}, num_rows, cudf::mask_state::ALL_VALID, shared_stream());
 
   // Set every other bit to null using cudf utilities
-  auto const num_rows = 100;
   std::vector<cudf::bitmask_type> host_mask(
     cudf::bitmask_allocation_size_bytes(num_rows) / sizeof(cudf::bitmask_type),
     ~cudf::bitmask_type{0});
@@ -252,7 +252,7 @@ TEST_CASE("gpu disk round-trip mixed-null column", "[disk][gpu-converter][null]"
     host_mask[word_idx] &= ~(cudf::bitmask_type{1} << bit_idx);
   }
   auto dev_mask = test::make_null_mask_from_host(num_rows, host_mask, shared_stream());
-  col->set_null_mask(std::move(dev_mask), 50);  // 50 nulls out of 100
+  col->set_null_mask(std::move(dev_mask), (num_rows + 1) / 2);
 
   std::vector<std::unique_ptr<cudf::column>> cols;
   cols.push_back(std::move(col));

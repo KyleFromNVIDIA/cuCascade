@@ -27,9 +27,9 @@
 #include <rapids/cuda/buffer>
 #else
 #include <rmm/device_buffer.hpp>
+#endif
 
 #include <cstddef>
-#endif
 
 /**
  * @brief Alias for the buffer type cudf uses to hold a column's null mask.
@@ -50,4 +50,9 @@ using null_mask_size_element = cudf::bitmask_type;
 using null_mask_buffer       = rmm::device_buffer;
 using null_mask_size_element = std::byte;
 #endif
+/** @brief Return the null-mask allocation size in bytes across cudf buffer types. */
+[[nodiscard]] inline std::size_t get_null_mask_size_bytes(null_mask_buffer const& mask) noexcept
+{
+  return mask.size() * sizeof(null_mask_size_element);
+}
 }  // namespace cucascade::cudf_compat
