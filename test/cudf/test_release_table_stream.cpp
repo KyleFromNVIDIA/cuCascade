@@ -350,30 +350,6 @@ int device_of(void const* ptr)
 constexpr std::string_view injected_allocation_failure{"injected allocation failure"};
 
 /**
- * @brief Helper function to create RMM callback memory resource.
- *
- * `rmm::mr::callback_memory_resource` changed its API in 26.12 to add an `alignment`
- * argument. We don't need it, but we need to adapt to the new API.
- *
- * TODO: drop this once the minimum supported RMM version is 26.12.
- */
-template <typename AllocateF, typename DeallocateF>
-rmm::mr::callback_memory_resource fixture_resource(AllocateF allocate, DeallocateF deallocate)
-{
-#if RMM_NEW_CALLBACK_MEMORY_RESOURCE
-  return rmm::mr::callback_memory_resource{allocate, deallocate};
-#else
-  return rmm::mr::callback_memory_resource{
-    [allocate](std::size_t bytes, ::cuda::stream_ref stream, void* data) -> void* {
-      return allocate(stream, bytes, rmm::CUDA_ALLOCATION_ALIGNMENT, data);
-    },
-    [deallocate](void* ptr, std::size_t bytes, ::cuda::stream_ref stream, void* data) {
-      deallocate(stream, ptr, bytes, rmm::CUDA_ALLOCATION_ALIGNMENT, data);
-    }};
-#endif
-}
-
-/**
  * @brief Make one allocation from the current device's memory resource fail while this object
  * lives.
  *
@@ -384,7 +360,7 @@ rmm::mr::callback_memory_resource fixture_resource(AllocateF allocate, Deallocat
 class failing_allocation_scope {
  public:
   explicit failing_allocation_scope(int failing_allocation)
-    : _previous{rmm::mr::set_current_device_resource(fixture_resource(
+    : _previous{rmm::mr::set_current_device_resource(memory_resource(
         [this, failing_allocation](
           ::cuda::stream_ref stream, std::size_t bytes, std::size_t, void*) -> void* {
           if (++_allocations == failing_allocation) {
@@ -408,6 +384,30 @@ class failing_allocation_scope {
  private:
   int _allocations{0};
   ::cuda::mr::any_resource<::cuda::mr::device_accessible> _previous;
+
+  /**
+   * @brief Helper function to create RMM callback memory resource.
+   *
+   * `rmm::mr::callback_memory_resource` changed its API in 26.12 to add an `alignment`
+   * argument. We don't need it, but we need to adapt to the new API.
+   *
+   * TODO: drop this once the minimum supported RMM version is 26.12.
+   */
+  template <typename AllocateF, typename DeallocateF>
+  rmm::mr::callback_memory_resource memory_resource(AllocateF allocate, DeallocateF deallocate)
+  {
+#if RMM_NEW_CALLBACK_MEMORY_RESOURCE
+    return rmm::mr::callback_memory_resource{allocate, deallocate};
+#else
+    return rmm::mr::callback_memory_resource{
+      [allocate](std::size_t bytes, ::cuda::stream_ref stream, void* data) -> void* {
+        return allocate(stream, bytes, rmm::CUDA_ALLOCATION_ALIGNMENT, data);
+      },
+      [deallocate](void* ptr, std::size_t bytes, ::cuda::stream_ref stream, void* data) {
+        deallocate(stream, ptr, bytes, rmm::CUDA_ALLOCATION_ALIGNMENT, data);
+      }};
+#endif
+  }
 };
 
 /// Pinned so the D2H readback enqueues asynchronously instead of staging synchronously.
