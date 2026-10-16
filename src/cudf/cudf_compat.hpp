@@ -27,6 +27,8 @@
 #include <rapids/cuda/buffer>
 #else
 #include <rmm/device_buffer.hpp>
+
+#include <cstddef>
 #endif
 
 /**
@@ -42,8 +44,10 @@
  */
 namespace cucascade::cudf_compat {
 #if CUCASCADE_CUDF_NEW_NULL_MASK
-using null_mask_buffer = ::cuda::device_buffer<cudf::bitmask_type>;
+using null_mask_buffer       = ::cuda::device_buffer<cudf::bitmask_type>;
+using null_mask_size_element = cudf::bitmask_type;
 #else
-using null_mask_buffer = rmm::device_buffer;
+using null_mask_buffer       = rmm::device_buffer;
+using null_mask_size_element = std::byte;
 #endif
 }  // namespace cucascade::cudf_compat

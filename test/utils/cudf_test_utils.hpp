@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "../../src/cudf/cudf_compat.hpp"
+
 #include <cucascade/cuda/stream.hpp>
 #include <cucascade/error.hpp>
 
@@ -48,7 +50,7 @@ inline auto make_null_mask_from_host(cudf::size_type rows,
 {
   auto mask             = cudf::create_null_mask(rows, cudf::mask_state::UNINITIALIZED, stream);
   auto const mask_bytes = host_mask.size() * sizeof(cudf::bitmask_type);
-  REQUIRE(mask_bytes <= mask.size());
+  REQUIRE(mask_bytes <= mask.size() * sizeof(cudf_compat::null_mask_size_element));
   CUCASCADE_CUDA_TRY(cudaMemcpyAsync(
     mask.data(), host_mask.data(), mask_bytes, cudaMemcpyHostToDevice, stream.get()));
   stream.sync();
