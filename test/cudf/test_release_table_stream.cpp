@@ -370,6 +370,7 @@ rmm::mr::callback_memory_resource fixture_resource(AllocateF allocate, Deallocat
     [deallocate](void* ptr, std::size_t bytes, ::cuda::stream_ref stream, void* data) {
       deallocate(stream, ptr, bytes, rmm::CUDA_ALLOCATION_ALIGNMENT, data);
     }};
+#endif
 }
 
 /**
