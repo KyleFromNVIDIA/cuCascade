@@ -360,7 +360,7 @@ constexpr std::string_view injected_allocation_failure{"injected allocation fail
 class failing_allocation_scope {
  public:
   explicit failing_allocation_scope(int failing_allocation)
-    : _previous{rmm::mr::set_current_device_resource(memory_resource(
+    : _previous{rmm::mr::set_current_device_resource(adapt_compat_memory_resource(
         [this, failing_allocation](
           ::cuda::stream_ref stream, std::size_t bytes, std::size_t, void*) -> void* {
           if (++_allocations == failing_allocation) {
@@ -394,7 +394,8 @@ class failing_allocation_scope {
    * TODO: drop this once the minimum supported RMM version is 26.12.
    */
   template <typename AllocateF, typename DeallocateF>
-  rmm::mr::callback_memory_resource memory_resource(AllocateF allocate, DeallocateF deallocate)
+  rmm::mr::callback_memory_resource adapt_compat_memory_resource(AllocateF allocate,
+                                                                 DeallocateF deallocate)
   {
 #if RMM_NEW_CALLBACK_MEMORY_RESOURCE
     return rmm::mr::callback_memory_resource{allocate, deallocate};
